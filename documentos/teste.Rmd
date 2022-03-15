@@ -1,0 +1,148 @@
+---
+title: "Introdução à Análise Exploratória de Dados"
+author: "Kauê Dario RA: 161023177"
+date: "14/03/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introdução
+
+Este projeto final consiste em realizar uma Análise Exploratória de [Dados](https://moodle.unesp.br/mod/folder/view.php?id=76521 "Dados") (AED) cujos [dados](https://moodle.unesp.br/mod/folder/view.php?id=76521 "Dados") estão contidos em duas planilhas armazenadas no formato Excel (.xlsx).
+
+De forma geral, a análise exploratória visará compreender como a pandemia do "novo coronavírus" está "impactando"\*\* a vida das pessoas de uma determinada cidade.
+
+Neste projeto, a AED deverá oferecer subsídios para identificar a característica dos casos e óbitos notificados de Covid-19 na cidade de Bauru:\
+- distribuição de acordo com a idade dos pacientes:\
+- verificar quais as características das comorbidades dos óbitos;\
+- variação periódica de tais óbitos;\
+- tipos e tempo de permanência hospitalar;\
+- relação entre óbitos ocorridos e a vacinação dos falecidos.
+
+Os [dados](https://moodle.unesp.br/mod/folder/view.php?id=76521 "Dados") aqui apresentados foram obtidos através de reportagens publicadas nos anos de 2020 e 2022 no periódico "Jornal da Cidade", editado na cidade de Bauru, interior do Estado de São Paulo (<https://www.jcnet.com.br/)> e representam uma síntese dos [dados](https://moodle.unesp.br/mod/folder/view.php?id=76521 "Dados") divulgados pela Prefeitura Municipal de Bauru (<https://www2.bauru.sp.gov.br/coronavirus/)> nos seus informes epidemiológicos
+
+## Análise dos Dados
+
+### **Distribuição de óbitos entre idades**
+
+Neste gráfico obtemos a distribuição de óbitos entre gêneros
+
+```{r echo=FALSE}
+library(readxl)
+covid_19_bauru_mortes <- read_excel("../dados/covid_19_bauru_mortes.xlsx")
+
+sort (covid_19_bauru_mortes$idade)
+range(covid_19_bauru_mortes$idade, na.rm = TRUE)
+
+AT <- ceiling((max(covid_19_bauru_mortes$idade, na.rm = TRUE)- min(covid_19_bauru_mortes$idade, na.rm = TRUE)))
+AT
+
+k <- nclass.Sturges(covid_19_bauru_mortes$idade)
+length(covid_19_bauru_mortes$idade)
+
+k <- ceiling((sqrt(length(covid_19_bauru_mortes$idade))))
+k
+
+h <- ceiling(AT/k)
+h
+
+infclass <- min(covid_19_bauru_mortes$idade, na.rm = TRUE)
+supclass <- infclass+(k*h)
+
+brk <-seq(infclass,supclass,h)
+tabelaDF_idades<-table(cut(covid_19_bauru_mortes$idade,breaks = brk, right = FALSE))
+tabelaDF_idades
+
+hist(covid_19_bauru_mortes$idade, main="Distribuição de Idades", xlab = "Idades", ylab = "Frequência")
+axis(1, at=seq(infclass,supclass,h))
+axis(2, at=seq(0,max(tabelaDF_idades),2))
+```
+
+### **Características das comorbidades**
+
+Neste gráfico podemos observar as características das comorbidades
+
+```{r echo=FALSE}
+library(readxl)
+covid_19_bauru_mortes <- read_excel("../dados/covid_19_bauru_mortes.xlsx")
+comorbidades <- table(covid_19_bauru_mortes$comorbidade)
+
+par(mar=c(5,30,4,1)+.1)
+barplot(sort(comorbidades, decreasing=TRUE),
+        horiz = TRUE,
+        las = 1)
+mtext(side = 1, text = "Número de mortes", line = 2)
+box(bty = "L")
+```
+
+### Variação periódica dos óbitos
+
+Neste gráfico podemos observar a variação periódica dos óbitos
+
+```{r echo=FALSE}
+library(ggplot2)
+library(readxl)
+covid_19_bauru_mortes <- read_excel("../dados/covid_19_bauru_mortes.xlsx", range=cell_cols("G:G"), col_types=c("date"))
+obitos <- table(covid_19_bauru_mortes)
+barplot(obitos[-1])
+mtext(side = 1, text = "Data", line = 2)
+mtext(side = 2, text = "Mortes", line = 2)
+
+```
+
+### Tipos de permanência hospitalar
+
+Neste gráfico podemos observar os tipos de mortes por permanência hospitalar
+
+```{r echo=FALSE}
+library(readxl)
+covid_19_bauru_mortes <- read_excel("../dados/covid_19_bauru_mortes.xlsx")
+
+priv <- length(covid_19_bauru_mortes$tipo_hosp[which(covid_19_bauru_mortes$tipo_hosp=="privado")])
+
+pub <- length(covid_19_bauru_mortes$tipo_hosp[which(covid_19_bauru_mortes$tipo_hosp=="público")])
+
+unique(pub)
+unique(priv)
+
+dados <- table(covid_19_bauru_mortes$tipo_hosp)
+
+barplot(dados, main="Número de Óbitos por Tipo de Hospitais", xlab = "Tipo de hospitais", ylab = "Total")
+
+```
+
+### Tempo de permanência hospitalar
+
+Nestes dados, podemos observar o tempo de permanência hospitalar
+
+```{r echo=FALSE}
+covid_19_bauru_mortes$inicio_sintoma <- as.Date(covid_19_bauru_mortes$inicio_sintoma)
+covid_19_bauru_mortes$data_obito <- as.Date(covid_19_bauru_mortes$data_obito)
+
+options(max.print = 99999999)
+
+covid_19_bauru_mortes[["tempo"]] <- difftime(covid_19_bauru_mortes$data_obito, covid_19_bauru_mortes$inicio_sintoma, units = "days")
+
+covid_19_bauru_mortes[["tempo"]]
+```
+
+### Relação entre óbitos e vacinados
+
+Este gráfico observa a relação entre óbitos e vacinados
+
+```{r echo=FALSE}
+library(readxl)
+covid_19_bauru_mortes <- read_excel("../dados/covid_19_bauru_mortes.xlsx", col_types=c("text"))
+covid_19_bauru_mortes[is.na(covid_19_bauru_mortes)] <- c("0")
+doses <- table(covid_19_bauru_mortes$doses_vacina)
+
+barplot(sort(doses, decreasing=TRUE),
+        horiz = TRUE,
+        las = 1)
+mtext(side = 1, text = "Óbitos", line = 2)
+mtext(side = 2, text = "Doses", line = 2)
+box(bty = "L")
+```
