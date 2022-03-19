@@ -3,6 +3,7 @@ title: "Introdução à Análise Exploratória de Dados"
 author: 'Kauê Dario RA: 161023177'
 date: "14/03/2022"
 output:
+  word_document: default
   html_document:
     df_print: paged
 ---

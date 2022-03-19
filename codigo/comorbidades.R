@@ -14,5 +14,5 @@ mtext(side = 1, text = "Número de mortes", line = 2)
 box(bty = "L")
 
 # Put plotting arrangement back to its original state
-par(mfrow = c(1, 1))
+par(mfrow=c(1, 1))
 
